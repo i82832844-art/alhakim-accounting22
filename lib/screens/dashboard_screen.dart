@@ -11,14 +11,7 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final repo = context.watch<ProductRepository>();
-    final products = repo.products;
-
-    double inventoryValue = 0;
-
-    for (final product in products) {
-      inventoryValue += product.purchasePrice * product.quantity;
-    }
+    final repo = context.read<ProductRepository>();
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -32,71 +25,74 @@ class DashboardScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                padding: const EdgeInsets.all(22),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFF176BFF),
-                      Color(0xFF6C4DFF),
+              FutureBuilder<double>(
+                future: repo.inventoryValue(),
+                builder: (context, snapshot) {
+                  final value = snapshot.data ?? 0;
+
+                  return Container(
+                    padding: const EdgeInsets.all(22),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color(0xFF176BFF),
+                          Color(0xFF6C4DFF),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'لوحة التحكم',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          value.toStringAsFixed(2),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 34,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const Text(
+                          'قيمة المخزون بسعر الشراء',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 18),
+              FutureBuilder<int>(
+                future: repo.count(),
+                builder: (context, snapshot) {
+                  final count = snapshot.data ?? 0;
+
+                  return Row(
+                    children: [
+                      _stat(
+                        'عدد المنتجات',
+                        count.toString(),
+                        Icons.inventory_2_outlined,
+                      ),
+                      const SizedBox(width: 12),
+                      _stat(
+                        'حالة النظام',
+                        'جاهز',
+                        Icons.check_circle_outline,
+                      ),
                     ],
-                  ),
-                  borderRadius: BorderRadius.circular(28),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'لوحة التحكم',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      inventoryValue.toStringAsFixed(2),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 34,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const Text(
-                      'قيمة المخزون بسعر الشراء',
-                      style: TextStyle(
-                        color: Colors.white70,
-                      ),
-                    ),
-                  ],
-                ),
+                  );
+                },
               ),
-
               const SizedBox(height: 18),
-
-              Row(
-                children: [
-                  _stat(
-                    'عدد المنتجات',
-                    products.length.toString(),
-                    Icons.inventory_2_outlined,
-                  ),
-                  const SizedBox(width: 12),
-                  _stat(
-                    'إجمالي الكمية',
-                    products
-                        .fold<int>(
-                          0,
-                          (sum, product) => sum + product.quantity,
-                        )
-                        .toString(),
-                    Icons.layers_outlined,
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 18),
-
               Row(
                 children: [
                   _quick(
@@ -128,9 +124,7 @@ class DashboardScreen extends StatelessWidget {
                   ),
                 ],
               ),
-
               const SizedBox(height: 12),
-
               _quickWide(
                 context,
                 'إضافة منتج جديد',
@@ -151,11 +145,7 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _stat(
-    String title,
-    String value,
-    IconData icon,
-  ) {
+  Widget _stat(String title, String value, IconData icon) {
     return Expanded(
       child: Card(
         child: Padding(
@@ -170,9 +160,7 @@ class DashboardScreen extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
-                        color: Colors.black54,
-                      ),
+                      style: const TextStyle(color: Colors.black54),
                     ),
                     const SizedBox(height: 3),
                     Text(
@@ -211,9 +199,7 @@ class DashboardScreen extends StatelessWidget {
                 const SizedBox(height: 10),
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -257,5 +243,4 @@ class DashboardScreen extends StatelessWidget {
       ),
     );
   }
-}(padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18), child: Row(children: [Icon(icon, size: 30), const SizedBox(width: 14), Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)), const Spacer(), const Icon(Icons.chevron_left)])));
 }
