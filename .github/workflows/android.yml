@@ -31,7 +31,22 @@ jobs:
 
       - name: Generate Android project
         run: flutter create --platforms=android --org com.alhakim --project-name alhakim_accounting .
+      - name: Set Gradle 8.11.1
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
 
+          p = Path("android/gradle/wrapper/gradle-wrapper.properties")
+          s = p.read_text()
+          import re
+          s = re.sub(
+              r"distributionUrl=.*",
+              "distributionUrl=https\\://services.gradle.org/distributions/gradle-8.11.1-all.zip",
+              s,
+          )
+          p.write_text(s)
+          PY
       - name: Configure Android build tools and JVM
         shell: bash
         run: |
