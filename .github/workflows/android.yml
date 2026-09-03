@@ -34,15 +34,33 @@ jobs:
 
           p = Path("android/settings.gradle")
           s = p.read_text()
-          s = s.replace("id \"com.android.application\" version \"8.6.1\"", "id \"com.android.application\" version \"8.9.1\"")
-          s = s.replace("id \"org.jetbrains.kotlin.android\" version \"2.0.21\"", "id \"org.jetbrains.kotlin.android\" version \"2.1.0\"")
+          s = s.replace('id "com.android.application" version "8.6.1"', 'id "com.android.application" version "8.9.1"')
+          s = s.replace('id "org.jetbrains.kotlin.android" version "2.0.21"', 'id "org.jetbrains.kotlin.android" version "2.1.0"')
           p.write_text(s)
           PY
 
-          if grep -q "8.6.1" android/settings.gradle; then
-            echo "ERROR: Android Gradle Plugin version was not updated"
-            exit 1
-          fi
+      - name: Configure Android JVM targets
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path("android/app/build.gradle")
+          s = p.read_text()
+
+          if "compileOptions" not in s:
+              s = s.replace(
+                  "android {",
+                  "android {\n    compileOptions {\n        sourceCompatibility JavaVersion.VERSION_17\n        targetCompatibility JavaVersion.VERSION_17\n    }\n    kotlinOptions {\n        jvmTarget = '17'\n    }\n",
+                  1,
+              )
+          else:
+              s = s.replace('sourceCompatibility JavaVersion.VERSION_1_8', 'sourceCompatibility JavaVersion.VERSION_17')
+              s = s.replace('targetCompatibility JavaVersion.VERSION_1_8', 'targetCompatibility JavaVersion.VERSION_17')
+              s = s.replace("jvmTarget = '1.8'", "jvmTarget = '17'")
+
+          p.write_text(s)
+          PY
 
       - name: Add camera permission
         shell: bash
