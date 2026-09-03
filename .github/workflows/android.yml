@@ -26,6 +26,24 @@ jobs:
       - name: Generate Android project
         run: flutter create --platforms=android --org com.alhakim --project-name alhakim_accounting .
 
+      - name: Upgrade Android build tools
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path("android/settings.gradle")
+          s = p.read_text()
+          s = s.replace("id \"com.android.application\" version \"8.6.1\"", "id \"com.android.application\" version \"8.9.1\"")
+          s = s.replace("id \"org.jetbrains.kotlin.android\" version \"2.0.21\"", "id \"org.jetbrains.kotlin.android\" version \"2.1.0\"")
+          p.write_text(s)
+          PY
+
+          if grep -q "8.6.1" android/settings.gradle; then
+            echo "ERROR: Android Gradle Plugin version was not updated"
+            exit 1
+          fi
+
       - name: Add camera permission
         shell: bash
         run: |
